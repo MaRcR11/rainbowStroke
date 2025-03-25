@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      background-color: black;
+    }
+
+    canvas {
+      display: block;
+      cursor: none;
+    }
+  </style>
+</head>
+<body>
+
+  <canvas id="trail-canvas"></canvas>
+
+  <script>
+    const canvas = document.getElementById('trail-canvas');
+    const ctx = canvas.getContext('2d');
+    const trailLength = 20;
+    const trail = [];
+    let cursor = { x: 0, y: 0 };
+    let lastMouseTime = Date.now();
+
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    document.addEventListener('mousemove', (e) => {
+      cursor = { x: e.clientX, y: e.clientY };
+      lastMouseTime = Date.now();
+    });
+
+    canvas.addEventListener('mouseenter', () => {
+      canvas.style.cursor = 'none'; 
+    });
+
+    canvas.addEventListener('mouseleave', () => {
+      canvas.style.cursor = 'auto'; 
+    });
+
+    function drawTrail() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      trail.unshift({ x: cursor.x, y: cursor.y });
+
+      if (trail.length > trailLength) {
+        trail.pop();
+      }
+
+      const elapsedMilliseconds = Date.now() - lastMouseTime;
+      const fadeOutDuration = 1000;
+
+      const alpha = Math.max(1 - elapsedMilliseconds / fadeOutDuration, 0);
+
+      ctx.beginPath();
+      ctx.moveTo(trail[0].x, trail[0].y);
+
+      for (let i = 1; i < trail.length - 2; i++) {
+        const xc = (trail[i].x + trail[i + 1].x) / 2;
+        const yc = (trail[i].y + trail[i + 1].y) / 2;
+        ctx.quadraticCurveTo(trail[i].x, trail[i].y, xc, yc);
+      }
+
+      ctx.lineTo(trail[trail.length - 1].x, trail[trail.length - 1].y);
+
+      const rainbowColor = `hsla(${(lastMouseTime / 10) % 360}, 100%, 50%, ${alpha})`;
+
+      ctx.strokeStyle = rainbowColor;
+      ctx.lineWidth = 5;
+      ctx.lineJoin = 'round';
+      ctx.lineCap = 'round'; 
+      ctx.stroke();
+      ctx.closePath();
+
+      requestAnimationFrame(drawTrail);
+    }
+
+    window.addEventListener('resize', () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    });
+
+    drawTrail();
+  </script>
+
+</body>
+</html>
